@@ -566,7 +566,13 @@ func (r *Replica) handlePropose(propose *genericsmr.Propose) {
 
 	if !r.isLeader && r.crtBalnum < 0 {
 		log.Println("Received request before leader 1a message")
-		r.ReplyProposeTS(&genericsmrproto.ProposeReplyTS{FALSE, -1, state.NIL, propose.Timestamp}, propose.Reply)
+		r.ReplyProposeTS(&genericsmrproto.ProposeReplyTS{FALSE, -1, state.NIL, propose.Timestamp,
+			// --- DUMMY VALUES (Zeroed) ---
+			0,          // Seq: Defaults to 0
+			[5]int32{}, // Deps: An array of five 0s: [0, 0, 0, 0, 0]
+			0,          // Replica: Defaults to 0
+			0,          // Instance: Defaults to 0
+		}, propose.Reply)
 		return
 	}
 
@@ -574,7 +580,13 @@ func (r *Replica) handlePropose(propose *genericsmr.Propose) {
 
 	if _, present := r.committed[propose.CommandId]; present {
 		if r.isLeader || ALL_TO_ALL {
-			r.ReplyProposeTS(&genericsmrproto.ProposeReplyTS{TRUE, propose.CommandId, state.NIL, propose.Timestamp}, propose.Reply)
+			r.ReplyProposeTS(&genericsmrproto.ProposeReplyTS{TRUE, propose.CommandId, state.NIL, propose.Timestamp,
+				// --- DUMMY VALUES (Zeroed) ---
+				0,          // Seq: Defaults to 0
+				[5]int32{}, // Deps: An array of five 0s: [0, 0, 0, 0, 0]
+				0,          // Replica: Defaults to 0
+				0,          // Instance: Defaults to 0
+			}, propose.Reply)
 		}
 		return
 	} else {
@@ -767,7 +779,13 @@ func (r *Replica) tryToLearn() {
 			r.committed[cid] = true
 			crtbal.lb.committed++
 			if prop, present := r.commandReplies[cid]; present {
-				r.ReplyProposeTS(&genericsmrproto.ProposeReplyTS{TRUE, cid, state.NIL, prop.Timestamp}, prop.Reply)
+				r.ReplyProposeTS(&genericsmrproto.ProposeReplyTS{TRUE, cid, state.NIL, prop.Timestamp,
+					// --- DUMMY VALUES (Zeroed) ---
+					0,          // Seq: Defaults to 0
+					[5]int32{}, // Deps: An array of five 0s: [0, 0, 0, 0, 0]
+					0,          // Replica: Defaults to 0
+					0,          // Instance: Defaults to 0
+				}, prop.Reply)
 				delete(r.commandReplies, cid)
 			}
 		}

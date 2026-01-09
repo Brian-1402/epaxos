@@ -99,7 +99,7 @@ func NewReplica(id int, peerAddrList []string, thrifty bool, exec bool, dreply b
 	return r
 }
 
-//append a log entry to stable storage
+// append a log entry to stable storage
 func (r *Replica) recordInstanceMetadata(inst *Instance) {
 	if !r.Durable {
 		return
@@ -111,7 +111,7 @@ func (r *Replica) recordInstanceMetadata(inst *Instance) {
 	r.StableStore.Write(b[:])
 }
 
-//write a sequence of commands to stable storage
+// write a sequence of commands to stable storage
 func (r *Replica) recordCommands(cmds []state.Command) {
 	if !r.Durable {
 		return
@@ -125,7 +125,7 @@ func (r *Replica) recordCommands(cmds []state.Command) {
 	}
 }
 
-//sync with the stable store
+// sync with the stable store
 func (r *Replica) sync() {
 	if !r.Durable {
 		return
@@ -378,7 +378,13 @@ func (r *Replica) bcastCommit(instance int32, ballot int32, command []state.Comm
 
 func (r *Replica) handlePropose(propose *genericsmr.Propose) {
 	if !r.IsLeader {
-		preply := &genericsmrproto.ProposeReplyTS{FALSE, -1, state.NIL, 0}
+		preply := &genericsmrproto.ProposeReplyTS{FALSE, -1, state.NIL, 0,
+			// --- DUMMY VALUES (Zeroed) ---
+			0,          // Seq: Defaults to 0
+			[5]int32{}, // Deps: An array of five 0s: [0, 0, 0, 0, 0]
+			0,          // Replica: Defaults to 0
+			0,          // Instance: Defaults to 0
+		}
 		r.ReplyProposeTS(preply, propose.Reply)
 		return
 	}
@@ -635,7 +641,13 @@ func (r *Replica) handleAcceptReply(areply *paxosproto.AcceptReply) {
 						TRUE,
 						inst.lb.clientProposals[i].CommandId,
 						state.NIL,
-						inst.lb.clientProposals[i].Timestamp}
+						inst.lb.clientProposals[i].Timestamp,
+						// --- DUMMY VALUES (Zeroed) ---
+						0,          // Seq: Defaults to 0
+						[5]int32{}, // Deps: An array of five 0s: [0, 0, 0, 0, 0]
+						0,          // Replica: Defaults to 0
+						0,          // Instance: Defaults to 0
+					}
 					r.ReplyProposeTS(propreply, inst.lb.clientProposals[i].Reply)
 				}
 			}
@@ -674,7 +686,13 @@ func (r *Replica) executeCommands() {
 							TRUE,
 							inst.lb.clientProposals[j].CommandId,
 							val,
-							inst.lb.clientProposals[j].Timestamp}
+							inst.lb.clientProposals[j].Timestamp,
+							// --- DUMMY VALUES (Zeroed) ---
+							0,          // Seq: Defaults to 0
+							[5]int32{}, // Deps: An array of five 0s: [0, 0, 0, 0, 0]
+							0,          // Replica: Defaults to 0
+							0,          // Instance: Defaults to 0
+						}
 						r.ReplyProposeTS(propreply, inst.lb.clientProposals[j].Reply)
 					}
 				}

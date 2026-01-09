@@ -1,0 +1,91 @@
+services:
+  master:
+    build: .
+    container_name: master
+    volumes:
+      - .:/app
+    ports:
+      - "7087:7087"
+    command: >
+      /docker-bin/master
+      -port 7087
+      -N 3
+
+  server-1:
+    build: .
+    container_name: server-1
+    depends_on:
+      - master
+    volumes:
+      - .:/app
+    ports:
+      - "7070:7070"
+    # Added: -maddr master (find master) AND -addr server-1 (identify myself)
+    command: >
+      sh -c "mkdir -p /app/logs &&
+      /docker-bin/server
+      -port 7070
+      -maddr master
+      -mport 7087
+      -addr server-1
+      -durable
+      -e 2>&1 | tee /app/logs/server-1.log"
+
+  server-2:
+    build: .
+    container_name: server-2
+    depends_on:
+      - master
+    volumes:
+      - .:/app
+    ports:
+      - "7071:7071"
+    command: >
+      sh -c "mkdir -p /app/logs &&
+      /docker-bin/server
+      -port 7071
+      -maddr master
+      -mport 7087
+      -addr server-2
+      -durable
+      -e 2>&1 | tee /app/logs/server-2.log"
+
+  server-3:
+    build: .
+    container_name: server-3
+    depends_on:
+      - master
+    volumes:
+      - .:/app
+    ports:
+      - "7072:7072"
+    command: >
+      sh -c "mkdir -p /app/logs &&
+      /docker-bin/server
+      -port 7072
+      -maddr master
+      -mport 7087
+      -addr server-3
+      -durable
+      -e 2>&1 | tee /app/logs/server-3.log"
+
+  client:
+    build: .
+    container_name: client
+    depends_on:
+      - master
+      - server-1
+      - server-2
+      - server-3
+    volumes:
+      - .:/app
+    # Uses the -maddr master flag you identified earlier
+    command: >
+      sh -c "
+      echo 'Waiting for servers to initialize...' &&
+      while [ \$(grep -rh 'Done connecting to peers' /app/logs | wc -l) -lt 3 ]; do
+        sleep 1;
+      done &&
+      echo 'All servers ready! Starting client...' &&
+      /docker-bin/client -e -q 500 -r 3 -maddr master
+      "

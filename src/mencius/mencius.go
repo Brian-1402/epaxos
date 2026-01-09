@@ -121,7 +121,7 @@ func NewReplica(id int, peerAddrList []string, thrifty bool, exec bool, dreply b
 	return r
 }
 
-//append a log entry to stable storage
+// append a log entry to stable storage
 func (r *Replica) recordInstanceMetadata(inst *Instance) {
 	if !r.Durable {
 		return
@@ -139,7 +139,7 @@ func (r *Replica) recordInstanceMetadata(inst *Instance) {
 	r.StableStore.Write(b[:])
 }
 
-//write a sequence of commands to stable storage
+// write a sequence of commands to stable storage
 func (r *Replica) recordCommand(cmd *state.Command) {
 	if !r.Durable {
 		return
@@ -151,7 +151,7 @@ func (r *Replica) recordCommand(cmd *state.Command) {
 	cmd.Marshal(io.Writer(r.StableStore))
 }
 
-//sync with the stable store
+// sync with the stable store
 func (r *Replica) sync() {
 	if !r.Durable {
 		return
@@ -770,7 +770,13 @@ func (r *Replica) updateBlocking(instance int32) {
 				if inst.lb.clientProposal != nil && !r.Dreply {
 					// give client the all clear
 					dlog.Printf("Sending ACK for req. %d\n", inst.lb.clientProposal.CommandId)
-					r.ReplyProposeTS(&genericsmrproto.ProposeReplyTS{TRUE, inst.lb.clientProposal.CommandId, state.NIL, inst.lb.clientProposal.Timestamp},
+					r.ReplyProposeTS(&genericsmrproto.ProposeReplyTS{TRUE, inst.lb.clientProposal.CommandId, state.NIL, inst.lb.clientProposal.Timestamp,
+						// --- DUMMY VALUES (Zeroed) ---
+						0,          // Seq: Defaults to 0
+						[5]int32{}, // Deps: An array of five 0s: [0, 0, 0, 0, 0]
+						0,          // Replica: Defaults to 0
+						0,          // Instance: Defaults to 0
+					},
 						inst.lb.clientProposal.Reply)
 				}
 				skip := FALSE
@@ -858,7 +864,13 @@ func (r *Replica) executeCommands() {
 
 			if r.Dreply && inst.lb != nil && inst.lb.clientProposal != nil {
 				dlog.Printf("Sending ACK for req. %d\n", inst.lb.clientProposal.CommandId)
-				r.ReplyProposeTS(&genericsmrproto.ProposeReplyTS{TRUE, inst.lb.clientProposal.CommandId, state.NIL, inst.lb.clientProposal.Timestamp},
+				r.ReplyProposeTS(&genericsmrproto.ProposeReplyTS{TRUE, inst.lb.clientProposal.CommandId, state.NIL, inst.lb.clientProposal.Timestamp,
+					// --- DUMMY VALUES (Zeroed) ---
+					0,          // Seq: Defaults to 0
+					[5]int32{}, // Deps: An array of five 0s: [0, 0, 0, 0, 0]
+					0,          // Replica: Defaults to 0
+					0,          // Instance: Defaults to 0
+				},
 					inst.lb.clientProposal.Reply)
 			}
 			inst.status = EXECUTED

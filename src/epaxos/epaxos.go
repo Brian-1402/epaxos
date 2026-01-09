@@ -182,7 +182,7 @@ func NewReplica(id int, peerAddrList []string, thrifty bool, exec bool, dreply b
 	return r
 }
 
-//append a log entry to stable storage
+// append a log entry to stable storage
 func (r *Replica) recordInstanceMetadata(inst *Instance) {
 	if !r.Durable {
 		return
@@ -200,7 +200,7 @@ func (r *Replica) recordInstanceMetadata(inst *Instance) {
 	r.StableStore.Write(b[:])
 }
 
-//write a sequence of commands to stable storage
+// write a sequence of commands to stable storage
 func (r *Replica) recordCommands(cmds []state.Command) {
 	if !r.Durable {
 		return
@@ -214,7 +214,7 @@ func (r *Replica) recordCommands(cmds []state.Command) {
 	}
 }
 
-//sync with the stable store
+// sync with the stable store
 func (r *Replica) sync() {
 	if !r.Durable {
 		return
@@ -704,8 +704,8 @@ func (r *Replica) updateConflicts(cmds []state.Command, replica int32, instance 
 				r.conflicts[replica][cmds[i].K] = instance
 			}
 		} else {
-            r.conflicts[replica][cmds[i].K] = instance
-        }
+			r.conflicts[replica][cmds[i].K] = instance
+		}
 		if s, present := r.maxSeqPerKey[cmds[i].K]; present {
 			if s < seq {
 				r.maxSeqPerKey[cmds[i].K] = seq
@@ -1060,7 +1060,13 @@ func (r *Replica) handlePreAcceptReply(pareply *epaxosproto.PreAcceptReply) {
 						TRUE,
 						inst.lb.clientProposals[i].CommandId,
 						state.NIL,
-						inst.lb.clientProposals[i].Timestamp},
+						inst.lb.clientProposals[i].Timestamp,
+						// NEW FIELDS
+						inst.Seq,         // <--- Populated Seq
+						inst.Deps,        // <--- Populated Deps
+						r.Id,             // <--- Populated Coordinator (Replica ID)
+						pareply.Instance, // <--- Populated Instance Number
+					},
 					inst.lb.clientProposals[i].Reply)
 			}
 		}
@@ -1121,7 +1127,13 @@ func (r *Replica) handlePreAcceptOK(pareply *epaxosproto.PreAcceptOK) {
 						TRUE,
 						inst.lb.clientProposals[i].CommandId,
 						state.NIL,
-						inst.lb.clientProposals[i].Timestamp},
+						inst.lb.clientProposals[i].Timestamp,
+						// NEW FIELDS
+						inst.Seq,         // <--- Populated Seq
+						inst.Deps,        // <--- Populated Deps
+						r.Id,             // <--- Populated Coordinator (Replica ID)
+						pareply.Instance, // <--- Populated Instance Number
+					},
 					inst.lb.clientProposals[i].Reply)
 			}
 		}
@@ -1238,7 +1250,13 @@ func (r *Replica) handleAcceptReply(areply *epaxosproto.AcceptReply) {
 						TRUE,
 						inst.lb.clientProposals[i].CommandId,
 						state.NIL,
-						inst.lb.clientProposals[i].Timestamp},
+						inst.lb.clientProposals[i].Timestamp,
+						// NEW FIELDS
+						inst.Seq,        // <--- Populated Seq
+						inst.Deps,       // <--- Populated Deps
+						r.Id,            // <--- Populated Coordinator (Replica ID)
+						areply.Instance, // <--- Populated Instance Number
+					},
 					inst.lb.clientProposals[i].Reply)
 			}
 		}
