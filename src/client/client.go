@@ -162,7 +162,7 @@ func main() {
 			args.Command.K = state.Key(karray[i])
 			args.Command.V = state.Value(i)
 			//args.Timestamp = time.Now().UnixNano()
-			fmt.Printf("Sending proposal %d with key %d (put=%v)\n", id, args.Command.K, put[i])
+			fmt.Printf("Sending proposal %d with key %d (put=%v) value %d \n", id, args.Command.K, put[i], args.Command.V)
 			if !*fast {
 				if *noLeader {
 					leader = rarray[i]
@@ -273,14 +273,15 @@ func waitReplies(readers []*bufio.Reader, leader int, n int, done chan bool) {
 
 		// Print exactly matching the Java "RET" format for complex responses (Writes).
 		// Note: Requires a 'clientId' variable in scope (or use a placeholder/0 if unavailable).
-		fmt.Printf("RET client=%d id=%d seq=%d coord=%d i=%d deps=%v hosts=%v\n",
+		fmt.Printf("RET client=%d id=%d val=%d seq=%d coord=%d i=%d deps=%v hosts=%v\n",
 			clientId,        // Matches Java 'client' (from requestClient map)
 			reply.CommandId, // Matches Java 'id' (reqId)
-			reply.Seq,       // Matches Java 'seq'
-			reply.Replica,   // Matches Java 'coord'
-			reply.Instance,  // Matches Java 'i' (instance index iN)
-			reply.Deps,      // Matches Java 'deps' (the instance numbers)
-			hosts,           // Matches Java 'hosts' (the replica IDs)
+			reply.Value,
+			reply.Seq,      // Matches Java 'seq'
+			reply.Replica,  // Matches Java 'coord'
+			reply.Instance, // Matches Java 'i' (instance index iN)
+			reply.Deps,     // Matches Java 'deps' (the instance numbers)
+			hosts,          // Matches Java 'hosts' (the replica IDs)
 		)
 	}
 	done <- e

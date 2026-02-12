@@ -128,8 +128,10 @@ func (r *Replica) ConnectToPeers() {
 
 	//connect to peers
 	for i := 0; i < int(r.Id); i++ {
+		log.Printf("DEBUG: Attempting to dial Peer %d at %s\n", i, r.PeerAddrList[i]) // <--- ADD LOG
 		for done := false; !done; {
 			if conn, err := net.Dial("tcp", r.PeerAddrList[i]); err == nil {
+				log.Printf("DEBUG: Successfully dialed Peer %d\n", i) // <--- ADD LOG
 				r.Peers[i] = conn
 				done = true
 			} else {
@@ -152,6 +154,10 @@ func (r *Replica) ConnectToPeers() {
 		if int32(rid) == r.Id {
 			continue
 		}
+		if reader == nil {
+			log.Printf("ERROR: Reader for Peer %d is nil! Skipping listener start.\n", rid)
+			continue
+        }
 		go r.replicaListener(rid, reader)
 	}
 }
@@ -192,17 +198,21 @@ func (r *Replica) waitForPeerConnections(done chan bool) {
 	bs := b[:4]
 
 	r.Listener, _ = net.Listen("tcp", r.PeerAddrList[r.Id])
+	log.Printf("DEBUG: Listening for peers on %s\n", r.PeerAddrList[r.Id]) // <--- ADD LOG
 	for i := r.Id + 1; i < int32(r.N); i++ {
 		conn, err := r.Listener.Accept()
 		if err != nil {
 			fmt.Println("Accept error:", err)
 			continue
 		}
+		log.Printf("DEBUG: Accepted connection from %s\n", conn.RemoteAddr().String()) // <--- ADD LOG
 		if _, err := io.ReadFull(conn, bs); err != nil {
 			fmt.Println("Connection establish error:", err)
+			log.Printf("DEBUG: Failed to read ID from %s. Closing conn.\n", conn.RemoteAddr().String()) // <--- ADD LOG
 			continue
 		}
 		id := int32(binary.LittleEndian.Uint32(bs))
+		log.Printf("DEBUG: Handshake success. Connected to Peer ID %d\n", id) // <--- ADD LOG
 		r.Peers[id] = conn
 		r.PeerReaders[id] = bufio.NewReader(conn)
 		r.PeerWriters[id] = bufio.NewWriter(conn)

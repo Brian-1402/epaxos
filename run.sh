@@ -7,9 +7,9 @@ echo "Starting Master..."
 ./bin/master -port 7087 -N 3 > logs/master.log 2>&1 &
 
 echo "Starting Servers..."
-bin/server -port 7070 -e > logs/server-1.log 2>&1 &
-bin/server -port 7071 -e > logs/server-2.log 2>&1 &
-bin/server -port 7072 -e > logs/server-3.log 2>&1 &
+bin/server -port 7070 -e -exec -dreply > logs/server-1.log 2>&1 &
+bin/server -port 7071 -e -exec -dreply > logs/server-2.log 2>&1 &
+bin/server -port 7072 -e -exec -dreply > logs/server-3.log 2>&1 &
 
 echo "Waiting for servers to initialize..."
 
@@ -25,4 +25,6 @@ echo "All servers ready! Starting Client..."
 bin/client -e \
     -q 500 \
     -r 3 \
+    -w 90 \
+    -c 50 \
     # -check \
